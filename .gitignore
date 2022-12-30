@@ -1,0 +1,5 @@
+/fakerfs
+*.exe
+*.dll
+config.*.yml
+

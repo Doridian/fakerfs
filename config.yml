@@ -1,0 +1,59 @@
+templates:
+  gpio_led:
+    type: directory
+    contents:
+    - path: brightness
+      type: integer
+      config:
+        max: 255
+        min: 0
+        current: 0
+    - path: max_brightness
+      type: fixed
+      config:
+        value: "255\n"
+    - path: trigger
+      type: choice
+      config:
+        choices:
+        - none
+        - timer
+        selected: none
+    - path: delay_on
+      type: integer
+      config:
+        min: 0
+        current: 0
+    - path: delay_off
+      type: integer
+      config:
+        min: 0
+        current: 0
+
+files:
+  - path: devices/platform
+    type: directory
+    contents:
+    - path: gpio-leds/leds
+      type: directory
+      contents:
+      - path: test_led
+        template: gpio_led
+      - path: board_led
+        template: gpio_led
+    - path: display-subsystem/suspend
+      type: fixed
+      config:
+        value: ""
+        allowWrites: true
+  - path: class/thermal
+    type: directory
+    contents:
+    - path: thermal_zone0/temp
+      type: fixed
+      config:
+        value: "42\n"
+    - path: thermal_zone1/temp
+      type: fixed
+      config:
+        value: "42\n"
