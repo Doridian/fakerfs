@@ -64,6 +64,10 @@ func (n *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOu
 }
 
 func (n *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+	if fh != nil {
+		return fh.(fs.FileSetattrer).Setattr(ctx, in, out)
+	}
+
 	if n.isFake {
 		return n.Getattr(ctx, fh, out)
 	}
