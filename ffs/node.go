@@ -41,7 +41,7 @@ func (n *fsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*
 	attr := fs.StableAttr{
 		Mode: fuse.S_IFREG,
 	}
-	if child.handler == nil {
+	if child.isDir() {
 		attr.Mode = fuse.S_IFDIR
 	}
 	return n.NewInode(ctx, child, attr), fs.OK

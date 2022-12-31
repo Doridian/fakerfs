@@ -76,7 +76,7 @@ func (l *fsLister) Next() (fuse.DirEntry, syscall.Errno) {
 		Name: sNode.name,
 		Mode: fuse.S_IFREG,
 	}
-	if sNode.handler == nil {
+	if sNode.isDir() {
 		dirEnt.Mode = fuse.S_IFDIR
 	}
 	return dirEnt, fs.OK
