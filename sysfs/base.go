@@ -123,5 +123,9 @@ func (f *fileHandle) Getattr(ctx context.Context, out *fuse.AttrOut) syscall.Err
 }
 
 func (f *fileHandle) Setattr(ctx context.Context, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	return f.Getattr(ctx, out)
+	errno := f.Getattr(ctx, out)
+	if errno != fs.OK {
+		return errno
+	}
+	return syscall.EPERM
 }
