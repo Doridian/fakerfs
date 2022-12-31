@@ -13,7 +13,7 @@ type SimpleNode struct {
 }
 
 func (*SimpleNode) Setattr(ctx context.Context, f fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	return syscall.EINVAL
+	return syscall.EPERM
 }
 
 func (*SimpleNode) Getattr(ctx context.Context, f fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
