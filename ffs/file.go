@@ -18,3 +18,7 @@ func (*FileNode) Getattr(ctx context.Context, f fs.FileHandle, out *fuse.AttrOut
 	out.Mode = fuse.S_IFREG | 0644
 	return fs.OK
 }
+
+func (*FileNode) GetStableMode() uint32 {
+	return fuse.S_IFREG
+}

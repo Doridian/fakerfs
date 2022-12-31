@@ -1,4 +1,7 @@
 /fakerfs
+/target
+/src
+
 *.exe
 *.dll
 *.log

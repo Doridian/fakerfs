@@ -18,6 +18,10 @@ type ffsDir struct {
 
 var _ NodeInterface = &ffsDir{}
 
+func (*ffsDir) GetStableMode() uint32 {
+	return fuse.S_IFDIR
+}
+
 func (*ffsDir) Getattr(ctx context.Context, f fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	util.FillAttr(out)
 	out.Mode = fuse.S_IFDIR | 0755
@@ -37,11 +41,12 @@ func (d *ffsDir) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*
 	subAttr := fuse.AttrOut{}
 	child.Getattr(ctx, nil, &subAttr)
 	out.Attr = subAttr.Attr
+
 	attr := fs.StableAttr{
-		Mode: subAttr.Attr.Mode,
+		Mode: child.GetStableMode(),
 	}
 
-	return d.NewInode(ctx, child, attr), fs.OK
+	return d.NewPersistentInode(ctx, child, attr), fs.OK
 }
 
 func (*ffsDir) Opendir(ctx context.Context) syscall.Errno {

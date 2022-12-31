@@ -1,7 +1,6 @@
 package ffs
 
 import (
-	"context"
 	"syscall"
 
 	"github.com/hanwen/go-fuse/v2/fs"
@@ -84,12 +83,8 @@ func (l *ffsDirLister) Next() (fuse.DirEntry, syscall.Errno) {
 
 	dirEnt := fuse.DirEntry{
 		Name: sNodeName,
-		Mode: fuse.S_IFREG,
+		Mode: sNode.GetStableMode(),
 	}
-
-	attrOut := fuse.AttrOut{}
-	sNode.Getattr(context.Background(), nil, &attrOut)
-	dirEnt.Mode = attrOut.Attr.Mode
 
 	return dirEnt, fs.OK
 }

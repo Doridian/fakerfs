@@ -7,4 +7,5 @@ import (
 type NodeInterface interface {
 	fs.InodeEmbedder
 	fs.NodeGetattrer
+	GetStableMode() uint32
 }
