@@ -17,7 +17,7 @@ func (l *dotAndDotDotLister) HasNext() bool {
 }
 
 func (l *dotAndDotDotLister) Next() (fuse.DirEntry, syscall.Errno) {
-	if l.idx >= 2 {
+	if !l.HasNext() {
 		return fuse.DirEntry{}, syscall.EINVAL
 	}
 
