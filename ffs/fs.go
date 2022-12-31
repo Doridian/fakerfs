@@ -39,12 +39,10 @@ func NewFakerFS(rootPath string) (*FakerFS, error) {
 	ffs.rootNode = ffs.newNode(ffs.rootFS, nil, "", &st).(*fsNode)
 	ffs.rootDir = &ffsDir{
 		children:  map[string]*fsNode{},
-		childList: []*fsNode{},
+		childList: []string{},
 	}
 	ffs.rootNode.handler = ffs.rootDir
 	ffs.rootDir.node = ffs.rootNode
-
-	ffs.rootNode.name = "[ROOT]"
 
 	return ffs, nil
 }
@@ -98,11 +96,10 @@ func (ffs *FakerFS) AddHandler(name string, file NodeInterface) {
 		if newNode == nil {
 			newDir = &ffsDir{
 				children:  map[string]*fsNode{},
-				childList: []*fsNode{},
+				childList: []string{},
 			}
 			newNode = &fsNode{
 				handler: newDir,
-				name:    name,
 				LoopbackNode: fs.LoopbackNode{
 					RootData: ffs.rootFS,
 				},
@@ -114,7 +111,7 @@ func (ffs *FakerFS) AddHandler(name string, file NodeInterface) {
 			}
 
 			parent.children[name] = newNode
-			parent.childList = append(parent.childList, newNode)
+			parent.childList = append(parent.childList, name)
 		} else {
 			newDir = newNode.handler.(*ffsDir)
 		}

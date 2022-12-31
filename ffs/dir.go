@@ -13,7 +13,7 @@ type ffsDir struct {
 	SimpleNode
 
 	children  map[string]*fsNode
-	childList []*fsNode
+	childList []string
 
 	node *fsNode
 }

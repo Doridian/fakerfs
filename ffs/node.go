@@ -28,8 +28,6 @@ type NodeInterface interface {
 
 type fsNode struct {
 	fs.LoopbackNode
-
-	name    string
 	handler NodeInterface
 }
 

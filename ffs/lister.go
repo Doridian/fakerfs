@@ -78,11 +78,12 @@ func (l *ffsDirLister) Next() (fuse.DirEntry, syscall.Errno) {
 		return fuse.DirEntry{}, syscall.EINVAL
 	}
 
-	sNode := l.dir.childList[l.idx]
+	sNodeName := l.dir.childList[l.idx]
 	l.idx++
+	sNode := l.dir.children[sNodeName]
 
 	dirEnt := fuse.DirEntry{
-		Name: sNode.name,
+		Name: sNodeName,
 		Mode: fuse.S_IFREG,
 	}
 
