@@ -43,7 +43,11 @@ func (n *fsNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuse
 		return n.handler.Open(ctx, flags)
 	}
 
-	return n.LoopbackNode.Open(ctx, flags)
+	fh, fuseFlags, errno = n.LoopbackNode.Open(ctx, flags)
+	if errno == fs.OK {
+		fuseFlags |= fuse.FOPEN_DIRECT_IO
+	}
+	return
 }
 
 func (n *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
