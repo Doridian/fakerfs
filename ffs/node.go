@@ -9,11 +9,14 @@ import (
 )
 
 type NodeInterface interface {
+	fs.NodeOpener
+
+	fs.NodeReadlinker
+
 	fs.NodeSetattrer
 	fs.NodeGetattrer
-	fs.NodeOpener
-	fs.NodeLookuper
 
+	fs.NodeLookuper
 	fs.NodeOpendirer
 	fs.NodeReaddirer
 
@@ -112,4 +115,44 @@ func (n *fsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	}
 
 	return n.LoopbackNode.Readdir(ctx)
+}
+
+func (n *fsNode) Readlink(ctx context.Context) ([]byte, syscall.Errno) {
+	if n.handler != nil {
+		return n.handler.Readlink(ctx)
+	}
+
+	return n.LoopbackNode.Readlink(ctx)
+}
+
+func (*fsNode) Mknod(ctx context.Context, name string, mode, rdev uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*fsNode) Mkdir(ctx context.Context, name string, mode uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*fsNode) Rmdir(ctx context.Context, name string) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*fsNode) Unlink(ctx context.Context, name string) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*fsNode) Rename(ctx context.Context, name string, newParent fs.InodeEmbedder, newName string, flags uint32) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*fsNode) Create(ctx context.Context, name string, flags uint32, mode uint32, out *fuse.EntryOut) (inode *fs.Inode, fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
+	return nil, nil, 0, syscall.EPERM
+}
+
+func (*fsNode) Symlink(ctx context.Context, target, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*fsNode) Link(ctx context.Context, target fs.InodeEmbedder, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
 }

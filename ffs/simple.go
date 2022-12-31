@@ -49,3 +49,7 @@ func (*SimpleNode) Listxattr(ctx context.Context, dest []byte) (uint32, syscall.
 func (*SimpleNode) Removexattr(ctx context.Context, attr string) syscall.Errno {
 	return syscall.EPERM
 }
+
+func (*SimpleNode) Readlink(ctx context.Context) ([]byte, syscall.Errno) {
+	return nil, syscall.ENOLINK
+}
