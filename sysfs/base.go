@@ -5,6 +5,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Doridian/fakerfs/ffs"
 	"github.com/Doridian/fakerfs/util"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
@@ -16,52 +17,50 @@ type FileHandler interface {
 	LoadConfig(map[string]interface{}) error
 }
 
-type FileFuse struct {
-	name    string
+type fsNode struct {
+	ffs.SimpleNode
+
 	handler FileHandler
 	mtime   uint64
 }
+
+var _ ffs.NodeInterface = &fsNode{}
 
 type fileHandle struct {
 	readData  []byte
 	readErrno syscall.Errno
 
-	fs           *FileFuse
+	fs           *fsNode
 	currentState []byte
 }
 
-func MakeFile(name string, handler FileHandler) *FileFuse {
-	file := &FileFuse{
-		name:    name,
+func MakeFile(handler FileHandler) *fsNode {
+	file := &fsNode{
 		handler: handler,
 		mtime:   0,
 	}
 	return file
 }
 
-func (f *FileFuse) GetName() string {
-	return f.name
-}
-
-func (f *FileFuse) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+func (f *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 	if fh == nil {
 		fh = f.MakeFileHandle()
 	}
 	return fh.(fs.FileGetattrer).Getattr(ctx, out)
 }
 
-func (f *FileFuse) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+func (f *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
 	if fh == nil {
 		fh = f.MakeFileHandle()
 	}
 	return fh.(fs.FileSetattrer).Setattr(ctx, in, out)
 }
 
-func (f *FileFuse) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {
+func (f *fsNode) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {
 	return f.MakeFileHandle(), fuse.FOPEN_DIRECT_IO | fuse.FOPEN_NONSEEKABLE, fs.OK
 }
 
-func (f *FileFuse) MakeFileHandle() *fileHandle {
+func (f *fsNode) MakeFileHandle() *fileHandle {
 	data, errno := f.handler.GetData()
 	return &fileHandle{
 		currentState: []byte{},
