@@ -13,8 +13,7 @@ import (
 type FakerFS struct {
 	rootPath string
 	rootFS   *fs.LoopbackRoot
-	rootNode *fsNode
-	rootDir  *ffsDir
+	rootNode *ffsDir
 
 	server *fuse.Server
 }
@@ -31,28 +30,19 @@ func NewFakerFS(rootPath string) (*FakerFS, error) {
 	}
 
 	ffs.rootFS = &fs.LoopbackRoot{
-		Path:    rootPath,
-		Dev:     uint64(st.Dev),
-		NewNode: ffs.newNode,
+		Path: rootPath,
+		Dev:  uint64(st.Dev),
 	}
 
-	ffs.rootNode = ffs.newNode(ffs.rootFS, nil, "", &st).(*fsNode)
-	ffs.rootDir = &ffsDir{
-		children:  map[string]*fsNode{},
+	ffs.rootNode = &ffsDir{
+		LoopbackNode: fs.LoopbackNode{
+			RootData: ffs.rootFS,
+		},
+		children:  map[string]NodeInterface{},
 		childList: []string{},
 	}
-	ffs.rootNode.handler = ffs.rootDir
-	ffs.rootDir.node = ffs.rootNode
 
 	return ffs, nil
-}
-
-func (ffs *FakerFS) newNode(rootData *fs.LoopbackRoot, parent *fs.Inode, name string, st *syscall.Stat_t) fs.InodeEmbedder {
-	return &fsNode{
-		LoopbackNode: fs.LoopbackNode{
-			RootData: rootData,
-		},
-	}
 }
 
 func (ffs *FakerFS) Mount(target string) error {
@@ -85,7 +75,7 @@ func (ffs *FakerFS) AddHandler(name string, file NodeInterface) {
 
 	pathElems := strings.Split(path, string(os.PathSeparator))
 
-	parent := ffs.rootDir
+	parent := ffs.rootNode
 
 	lastIdx := len(pathElems) - 1
 
@@ -94,26 +84,24 @@ func (ffs *FakerFS) AddHandler(name string, file NodeInterface) {
 		newNode := parent.children[name]
 		var newDir *ffsDir
 		if newNode == nil {
-			newDir = &ffsDir{
-				children:  map[string]*fsNode{},
-				childList: []string{},
-			}
-			newNode = &fsNode{
-				handler: newDir,
-				LoopbackNode: fs.LoopbackNode{
-					RootData: ffs.rootFS,
-				},
-			}
-			newDir.node = newNode
-
 			if i == lastIdx {
-				newNode.handler = file
+				newDir = nil
+				newNode = file
+			} else {
+				newDir = &ffsDir{
+					LoopbackNode: fs.LoopbackNode{
+						RootData: ffs.rootFS,
+					},
+					children:  map[string]NodeInterface{},
+					childList: []string{},
+				}
+				newNode = newDir
 			}
 
 			parent.children[name] = newNode
 			parent.childList = append(parent.childList, name)
 		} else {
-			newDir = newNode.handler.(*ffsDir)
+			newDir = newNode.(*ffsDir)
 		}
 
 		parent = newDir

@@ -18,7 +18,7 @@ type FileHandler interface {
 }
 
 type fsNode struct {
-	ffs.SimpleNode
+	ffs.FileNode
 
 	handler FileHandler
 	mtime   uint64
