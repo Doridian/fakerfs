@@ -81,3 +81,35 @@ func (*ffsDir) Removexattr(ctx context.Context, attr string) syscall.Errno {
 func (*ffsDir) Readlink(ctx context.Context) ([]byte, syscall.Errno) {
 	return nil, syscall.EINVAL
 }
+
+func (*ffsDir) Mknod(ctx context.Context, name string, mode, rdev uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*ffsDir) Mkdir(ctx context.Context, name string, mode uint32, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*ffsDir) Rmdir(ctx context.Context, name string) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*ffsDir) Unlink(ctx context.Context, name string) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*ffsDir) Rename(ctx context.Context, name string, newParent fs.InodeEmbedder, newName string, flags uint32) syscall.Errno {
+	return syscall.EPERM
+}
+
+func (*ffsDir) Create(ctx context.Context, name string, flags uint32, mode uint32, out *fuse.EntryOut) (inode *fs.Inode, fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
+	return nil, nil, 0, syscall.EPERM
+}
+
+func (*ffsDir) Symlink(ctx context.Context, target, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
+
+func (*ffsDir) Link(ctx context.Context, target fs.InodeEmbedder, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
+	return nil, syscall.EPERM
+}
