@@ -1,5 +1,5 @@
 /fakerfs
 *.exe
 *.dll
-config.*.yml
-
+*.log
+*.pid
