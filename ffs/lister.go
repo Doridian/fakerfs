@@ -32,9 +32,7 @@ func (l *dotAndDotDotLister) Next() (fuse.DirEntry, syscall.Errno) {
 	}, fs.OK
 }
 
-func (l *dotAndDotDotLister) Close() {
-
-}
+func (l *dotAndDotDotLister) Close() {}
 
 type fsLister struct {
 	parent fs.DirStream
@@ -85,5 +83,5 @@ func (l *fsLister) Next() (fuse.DirEntry, syscall.Errno) {
 }
 
 func (l *fsLister) Close() {
-
+	l.parent.Close()
 }

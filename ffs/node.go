@@ -28,6 +28,10 @@ type fsNode struct {
 	childList []*fsNode
 }
 
+func (n *fsNode) isDir() bool {
+	return n.handler == nil
+}
+
 func (n *fsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*fs.Inode, syscall.Errno) {
 	child := n.children[name]
 	if child == nil {
@@ -44,7 +48,10 @@ func (n *fsNode) Lookup(ctx context.Context, name string, out *fuse.EntryOut) (*
 }
 
 func (n *fsNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
-	if n.isFake && n.handler != nil {
+	if n.isFake {
+		if n.isDir() {
+			return nil, 0, syscall.EISDIR
+		}
 		return n.handler.Open(ctx, flags)
 	}
 
@@ -52,69 +59,95 @@ func (n *fsNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuse
 }
 
 func (n *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
-	if n.isFake {
-		if n.handler != nil {
-			return n.handler.Getattr(ctx, fh, out)
-		}
+	if n.isFake && !n.isDir() {
+		return n.handler.Getattr(ctx, fh, out)
+	}
 
+	superErr := n.LoopbackNode.Getattr(ctx, fh, out)
+
+	if n.isFake && superErr == syscall.ENOENT {
 		util.FillAttr(out)
 		out.Mode = fuse.S_IFDIR | 0755
 
 		return fs.OK
 	}
 
-	return n.LoopbackNode.Getattr(ctx, fh, out)
+	return superErr
 }
 
 func (n *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	if n.isFake {
-		if n.handler != nil {
-			return n.handler.Setattr(ctx, fh, in, out)
-		}
+	if n.isFake && !n.isDir() {
+		return n.handler.Setattr(ctx, fh, in, out)
+	}
 
+	superErr := n.LoopbackNode.Setattr(ctx, fh, in, out)
+	if n.isFake && superErr == syscall.ENOENT {
 		util.FillAttr(out)
 		out.Mode = fuse.S_IFDIR | 0755
 
 		return fs.OK
 	}
 
-	return n.LoopbackNode.Setattr(ctx, fh, in, out)
+	return superErr
 }
 
 func (n *fsNode) Getxattr(ctx context.Context, attr string, dest []byte) (uint32, syscall.Errno) {
-	if n.isFake {
+	if n.isFake && !n.isDir() {
 		return 0, syscall.ENODATA
 	}
 
-	return n.LoopbackNode.Getxattr(ctx, attr, dest)
+	superRes, superErr := n.LoopbackNode.Getxattr(ctx, attr, dest)
+	if n.isFake && superErr == syscall.ENOENT {
+		return 0, syscall.ENODATA
+	}
+
+	return superRes, superErr
 }
 
 func (n *fsNode) Setxattr(ctx context.Context, attr string, data []byte, flags uint32) syscall.Errno {
-	if n.isFake {
+	if n.isFake && !n.isDir() {
 		return syscall.EPERM
 	}
 
-	return n.LoopbackNode.Setxattr(ctx, attr, data, flags)
+	superErr := n.LoopbackNode.Setxattr(ctx, attr, data, flags)
+	if n.isFake && superErr == syscall.ENOENT {
+		return syscall.EPERM
+	}
+
+	return superErr
 }
 
 func (n *fsNode) Removexattr(ctx context.Context, attr string) syscall.Errno {
-	if n.isFake {
+	if n.isFake && !n.isDir() {
 		return syscall.EPERM
 	}
 
-	return n.LoopbackNode.Removexattr(ctx, attr)
+	superErr := n.LoopbackNode.Removexattr(ctx, attr)
+	if n.isFake && superErr == syscall.ENOENT {
+		return syscall.EPERM
+	}
+
+	return superErr
 }
 
 func (n *fsNode) Listxattr(ctx context.Context, dest []byte) (uint32, syscall.Errno) {
-	if n.isFake {
+	if n.isFake && !n.isDir() {
 		return 0, syscall.ENODATA
 	}
 
-	return n.LoopbackNode.Listxattr(ctx, dest)
+	superRes, superErr := n.LoopbackNode.Listxattr(ctx, dest)
+	if n.isFake && superErr == syscall.ENOENT {
+		return 0, syscall.ENODATA
+	}
+
+	return superRes, superErr
 }
 
 func (n *fsNode) Opendir(ctx context.Context) syscall.Errno {
-	if n.isFake && n.handler == nil {
+	if n.isFake {
+		if !n.isDir() {
+			return syscall.ENOTDIR
+		}
 		return fs.OK
 	}
 
@@ -122,14 +155,13 @@ func (n *fsNode) Opendir(ctx context.Context) syscall.Errno {
 }
 
 func (n *fsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
-	superDir, superErr := n.LoopbackNode.Readdir(ctx)
-
-	if !n.isFake {
-		return superDir, superErr
+	if n.isFake && !n.isDir() {
+		return nil, syscall.ENOTDIR
 	}
 
-	if n.handler != nil {
-		return nil, syscall.ENOTDIR
+	superDir, superErr := n.LoopbackNode.Readdir(ctx)
+	if !n.isFake {
+		return superDir, superErr
 	}
 
 	if superErr != fs.OK {
