@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"log"
 	"os"
@@ -87,10 +88,24 @@ func main() {
 	}
 
 	if child != nil {
+		errorChannel := make(chan error, 1)
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, syscall.SIGUSR1)
-		<-signals
-		log.Printf("Mounted %v to %v in the background", *srcStr, *targetStr)
+
+		go func() {
+			_, childErr := child.Wait()
+			if childErr == nil {
+				childErr = errors.New("child died unexpectedly")
+			}
+			errorChannel <- childErr
+		}()
+
+		select {
+		case err := <-errorChannel:
+			log.Fatalf("Child error: %v", err)
+		case <-signals:
+			log.Printf("Mounted %v to %v in the background", *srcStr, *targetStr)
+		}
 		return
 	}
 	defer cntxt.Release()
