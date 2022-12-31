@@ -6,7 +6,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Doridian/fakerfs/dev"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 )
@@ -81,7 +80,7 @@ func (sfs *FakerFS) Wait() {
 	sfs.server.Wait()
 }
 
-func (sfs *FakerFS) AddHandler(file *dev.FileFuse) {
+func (sfs *FakerFS) AddHandler(file NodeInterface) {
 	path := filepath.Clean(file.GetName())
 
 	pathElems := strings.Split(path, string(os.PathSeparator))

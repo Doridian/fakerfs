@@ -1,4 +1,4 @@
-package dev
+package sysfs
 
 import (
 	"context"
@@ -41,6 +41,20 @@ func MakeFile(name string, handler FileHandler) *FileFuse {
 
 func (f *FileFuse) GetName() string {
 	return f.name
+}
+
+func (f *FileFuse) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
+	if fh == nil {
+		fh = f.MakeFileHandle()
+	}
+	return fh.(fs.FileGetattrer).Getattr(ctx, out)
+}
+
+func (f *FileFuse) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
+	if fh == nil {
+		fh = f.MakeFileHandle()
+	}
+	return fh.(fs.FileSetattrer).Setattr(ctx, in, out)
 }
 
 func (f *FileFuse) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {

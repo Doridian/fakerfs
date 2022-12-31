@@ -4,11 +4,18 @@ import (
 	"context"
 	"syscall"
 
-	"github.com/Doridian/fakerfs/dev"
 	"github.com/Doridian/fakerfs/util"
 	"github.com/hanwen/go-fuse/v2/fs"
 	"github.com/hanwen/go-fuse/v2/fuse"
 )
+
+type NodeInterface interface {
+	GetName() string
+
+	fs.NodeSetattrer
+	fs.NodeGetattrer
+	fs.NodeOpener
+}
 
 type fsNode struct {
 	fs.LoopbackNode
@@ -16,7 +23,7 @@ type fsNode struct {
 	isFake bool
 
 	name      string
-	handler   *dev.FileFuse
+	handler   NodeInterface
 	children  map[string]*fsNode
 	childList []*fsNode
 }
@@ -45,13 +52,9 @@ func (n *fsNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuse
 }
 
 func (n *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
-	if fh != nil {
-		return fh.(fs.FileGetattrer).Getattr(ctx, out)
-	}
-
 	if n.isFake {
 		if n.handler != nil {
-			return n.handler.MakeFileHandle().Getattr(ctx, out)
+			return n.handler.Getattr(ctx, fh, out)
 		}
 
 		util.FillAttr(out)
@@ -64,12 +67,15 @@ func (n *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOu
 }
 
 func (n *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	if fh != nil {
-		return fh.(fs.FileSetattrer).Setattr(ctx, in, out)
-	}
-
 	if n.isFake {
-		return n.Getattr(ctx, fh, out)
+		if n.handler != nil {
+			return n.handler.Setattr(ctx, fh, in, out)
+		}
+
+		util.FillAttr(out)
+		out.Mode = fuse.S_IFDIR | 0755
+
+		return fs.OK
 	}
 
 	return n.LoopbackNode.Setattr(ctx, fh, in, out)
@@ -118,8 +124,12 @@ func (n *fsNode) Opendir(ctx context.Context) syscall.Errno {
 func (n *fsNode) Readdir(ctx context.Context) (fs.DirStream, syscall.Errno) {
 	superDir, superErr := n.LoopbackNode.Readdir(ctx)
 
-	if !n.isFake || n.handler != nil {
+	if !n.isFake {
 		return superDir, superErr
+	}
+
+	if n.handler != nil {
+		return nil, syscall.ENOTDIR
 	}
 
 	if superErr != fs.OK {

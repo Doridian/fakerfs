@@ -4,7 +4,11 @@ go 1.18
 
 require (
 	github.com/hanwen/go-fuse/v2 v2.2.0
+	github.com/sevlyar/go-daemon v0.1.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.org/x/sys v0.0.0-20180830151530-49385e6e1522 // indirect
+require (
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	golang.org/x/sys v0.0.0-20180830151530-49385e6e1522 // indirect
+)
