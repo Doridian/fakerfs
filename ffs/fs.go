@@ -26,30 +26,30 @@ func NewFakerFS(rootPath string) (*FakerFS, error) {
 		return nil, err
 	}
 
-	sfs := &FakerFS{
+	ffs := &FakerFS{
 		rootPath: rootPath,
 	}
 
-	sfs.rootFS = &fs.LoopbackRoot{
+	ffs.rootFS = &fs.LoopbackRoot{
 		Path:    rootPath,
 		Dev:     uint64(st.Dev),
-		NewNode: sfs.newNode,
+		NewNode: ffs.newNode,
 	}
 
-	sfs.rootNode = sfs.newNode(sfs.rootFS, nil, "", &st).(*fsNode)
-	sfs.rootDir = &ffsDir{
+	ffs.rootNode = ffs.newNode(ffs.rootFS, nil, "", &st).(*fsNode)
+	ffs.rootDir = &ffsDir{
 		children:  map[string]*fsNode{},
 		childList: []*fsNode{},
 	}
-	sfs.rootNode.handler = sfs.rootDir
-	sfs.rootDir.node = sfs.rootNode
+	ffs.rootNode.handler = ffs.rootDir
+	ffs.rootDir.node = ffs.rootNode
 
-	sfs.rootNode.name = "[ROOT]"
+	ffs.rootNode.name = "[ROOT]"
 
-	return sfs, nil
+	return ffs, nil
 }
 
-func (sfs *FakerFS) newNode(rootData *fs.LoopbackRoot, parent *fs.Inode, name string, st *syscall.Stat_t) fs.InodeEmbedder {
+func (ffs *FakerFS) newNode(rootData *fs.LoopbackRoot, parent *fs.Inode, name string, st *syscall.Stat_t) fs.InodeEmbedder {
 	return &fsNode{
 		LoopbackNode: fs.LoopbackNode{
 			RootData: rootData,
@@ -57,37 +57,37 @@ func (sfs *FakerFS) newNode(rootData *fs.LoopbackRoot, parent *fs.Inode, name st
 	}
 }
 
-func (sfs *FakerFS) Mount(target string) error {
+func (ffs *FakerFS) Mount(target string) error {
 	opts := &fs.Options{}
 	opts.AllowOther = true
 	opts.DirectMount = true
 
 	opts.MountOptions.Options = append(opts.MountOptions.Options, "default_permissions")
 
-	opts.FsName = "sfs"
-	opts.Name = "sfs"
-	opts.MountOptions.Name = "sfs"
+	opts.FsName = "ffs"
+	opts.Name = "ffs"
+	opts.MountOptions.Name = "ffs"
 
-	server, err := fs.Mount(target, sfs.rootNode, opts)
+	server, err := fs.Mount(target, ffs.rootNode, opts)
 	if err != nil {
 		return err
 	}
 
-	sfs.server = server
+	ffs.server = server
 
 	return nil
 }
 
-func (sfs *FakerFS) Wait() {
-	sfs.server.Wait()
+func (ffs *FakerFS) Wait() {
+	ffs.server.Wait()
 }
 
-func (sfs *FakerFS) AddHandler(name string, file NodeInterface) {
+func (ffs *FakerFS) AddHandler(name string, file NodeInterface) {
 	path := filepath.Clean(name)
 
 	pathElems := strings.Split(path, string(os.PathSeparator))
 
-	parent := sfs.rootDir
+	parent := ffs.rootDir
 
 	lastIdx := len(pathElems) - 1
 
@@ -104,7 +104,7 @@ func (sfs *FakerFS) AddHandler(name string, file NodeInterface) {
 				handler: newDir,
 				name:    name,
 				LoopbackNode: fs.LoopbackNode{
-					RootData: sfs.rootFS,
+					RootData: ffs.rootFS,
 				},
 			}
 			newDir.node = newNode
