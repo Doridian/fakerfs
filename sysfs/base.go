@@ -22,6 +22,10 @@ type fsNode struct {
 
 	handler FileHandler
 	mtime   uint64
+
+	readData  []byte
+	readErrno syscall.Errno
+	cacheData bool
 }
 
 var _ ffs.NodeInterface = &fsNode{}
@@ -34,26 +38,23 @@ type fileHandle struct {
 	currentState []byte
 }
 
-func MakeFile(handler FileHandler) *fsNode {
+func MakeFile(handler FileHandler, cacheData bool) *fsNode {
 	file := &fsNode{
-		handler: handler,
-		mtime:   0,
+		handler:   handler,
+		mtime:     0,
+		cacheData: cacheData,
 	}
+
+	file.Refresh()
+
 	return file
 }
 
-func (f *fsNode) Getattr(ctx context.Context, fh fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
-	if fh == nil {
-		fh = f.MakeFileHandle()
+func (f *fsNode) Refresh() {
+	if !f.cacheData {
+		return
 	}
-	return fh.(fs.FileGetattrer).Getattr(ctx, out)
-}
-
-func (f *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	if fh == nil {
-		fh = f.MakeFileHandle()
-	}
-	return fh.(fs.FileSetattrer).Setattr(ctx, in, out)
+	f.readData, f.readErrno = f.handler.GetData()
 }
 
 func (f *fsNode) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {
@@ -61,13 +62,19 @@ func (f *fsNode) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32,
 }
 
 func (f *fsNode) MakeFileHandle() *fileHandle {
-	data, errno := f.handler.GetData()
-	return &fileHandle{
+	fh := &fileHandle{
 		currentState: []byte{},
-		readData:     data,
-		readErrno:    errno,
 		fs:           f,
 	}
+
+	if f.cacheData {
+		fh.readData = f.readData
+		fh.readErrno = f.readErrno
+	} else {
+		fh.readData, fh.readErrno = f.handler.GetData()
+	}
+
+	return fh
 }
 
 func (f *fileHandle) Read(ctx context.Context, dest []byte, off int64) (fuse.ReadResult, syscall.Errno) {
@@ -94,6 +101,8 @@ func (f *fileHandle) Write(ctx context.Context, data []byte, off int64) (uint32,
 	}
 
 	f.fs.mtime = uint64(time.Now().Unix())
+
+	f.fs.Refresh()
 
 	return uint32(len(data)), fs.OK
 }

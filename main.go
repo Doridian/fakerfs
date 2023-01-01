@@ -51,7 +51,7 @@ func runFSMount() {
 		if err != nil {
 			panic(err)
 		}
-		fuseFile := sysfs.MakeFile(handler)
+		fuseFile := sysfs.MakeFile(handler, true)
 		fakeFS.AddHandler(path, fuseFile)
 	}
 
