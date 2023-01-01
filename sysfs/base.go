@@ -57,7 +57,7 @@ func (f *fsNode) Setattr(ctx context.Context, fh fs.FileHandle, in *fuse.SetAttr
 }
 
 func (f *fsNode) Open(ctx context.Context, flags uint32) (fs.FileHandle, uint32, syscall.Errno) {
-	return f.MakeFileHandle(), fuse.FOPEN_DIRECT_IO | fuse.FOPEN_NONSEEKABLE, fs.OK
+	return f.MakeFileHandle(), fuse.FOPEN_KEEP_CACHE | fuse.FOPEN_NONSEEKABLE, fs.OK
 }
 
 func (f *fsNode) MakeFileHandle() *fileHandle {
@@ -123,9 +123,5 @@ func (f *fileHandle) Getattr(ctx context.Context, out *fuse.AttrOut) syscall.Err
 }
 
 func (f *fileHandle) Setattr(ctx context.Context, in *fuse.SetAttrIn, out *fuse.AttrOut) syscall.Errno {
-	errno := f.Getattr(ctx, out)
-	if errno != fs.OK {
-		return errno
-	}
-	return syscall.EPERM
+	return f.Getattr(ctx, out)
 }

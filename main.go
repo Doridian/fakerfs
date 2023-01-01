@@ -55,7 +55,7 @@ func runFSMount() {
 		fakeFS.AddHandler(path, fuseFile)
 	}
 
-	err = fakeFS.Mount(*targetStr)
+	err = fakeFS.Mount(*targetStr, false)
 	if err != nil {
 		panic(err)
 	}

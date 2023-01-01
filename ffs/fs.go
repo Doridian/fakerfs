@@ -1,7 +1,6 @@
 package ffs
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,18 +16,6 @@ type FakerFS struct {
 	rootNode *ffsDir
 
 	server *fuse.Server
-}
-
-type fakerFSFileNode struct {
-	fs.LoopbackNode
-}
-
-func (n *fakerFSFileNode) Open(ctx context.Context, flags uint32) (fh fs.FileHandle, fuseFlags uint32, errno syscall.Errno) {
-	fh, fuseFlags, errno = n.LoopbackNode.Open(ctx, flags)
-	if errno == fs.OK {
-		fuseFlags |= fuse.FOPEN_DIRECT_IO
-	}
-	return
 }
 
 func NewFakerFS(rootPath string) (*FakerFS, error) {
@@ -67,12 +54,14 @@ func (ffs *FakerFS) newNode(rootData *fs.LoopbackRoot, parent *fs.Inode, name st
 	}
 }
 
-func (ffs *FakerFS) Mount(target string) error {
+func (ffs *FakerFS) Mount(target string, debug bool) error {
 	opts := &fs.Options{}
 	opts.AllowOther = true
 	opts.DirectMount = true
 
 	opts.MountOptions.Options = append(opts.MountOptions.Options, "default_permissions")
+
+	opts.Debug = debug
 
 	opts.FsName = "ffs"
 	opts.Name = "ffs"
