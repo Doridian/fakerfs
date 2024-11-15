@@ -3,7 +3,7 @@ module github.com/Doridian/fakerfs
 go 1.18
 
 require (
-	github.com/hanwen/go-fuse/v2 v2.6.3
+	github.com/hanwen/go-fuse/v2 v2.6.4
 	github.com/sevlyar/go-daemon v0.1.6
 	gopkg.in/yaml.v3 v3.0.1
 )
