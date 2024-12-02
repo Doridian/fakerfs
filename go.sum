@@ -24,6 +24,8 @@ github.com/hanwen/go-fuse/v2 v2.7.0 h1:b3khst81C011GCwv9BF7PUa4lbbzIdRFPgAxRlgGU
 github.com/hanwen/go-fuse/v2 v2.7.0/go.mod h1:ugNaD/iv5JYyS1Rcvi57Wz7/vrLQJo10mmketmoef48=
 github.com/hanwen/go-fuse/v2 v2.7.1 h1:eH9VXvuo3YQ1Wq+W/7s+aI8JImKwx6yYkEn9/lBrv/A=
 github.com/hanwen/go-fuse/v2 v2.7.1/go.mod h1:ugNaD/iv5JYyS1Rcvi57Wz7/vrLQJo10mmketmoef48=
+github.com/hanwen/go-fuse/v2 v2.7.2 h1:SbJP1sUP+n1UF8NXBA14BuojmTez+mDgOk0bC057HQw=
+github.com/hanwen/go-fuse/v2 v2.7.2/go.mod h1:ugNaD/iv5JYyS1Rcvi57Wz7/vrLQJo10mmketmoef48=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
 github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348 h1:MtvEpTB6LX3vkb4ax0b5D2DHbNAUsen0Gx5wZoq3lV4=
